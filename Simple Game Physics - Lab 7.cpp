@@ -2,10 +2,91 @@
 //
 
 #include <iostream>
+#include <SFML/Graphics.hpp>
+#include <SFPhysics.h>
 
-int main()
-{
-    std::cout << "Hello World!\n";
+using namespace std;
+using namespace sf;
+using namespace sfp;
+
+int main() {
+    RenderWindow window(VideoMode(800, 600), "Bounce");
+    World world(Vector2f(0, 1));
+
+    PhysicsCircle ball;
+    ball.setCenter(Vector2f(100, 100));
+    ball.setRadius(20);
+    ball.applyImpulse(Vector2f(-1.0f, -0.0f));
+    world.AddPhysicsBody(ball);
+
+    PhysicsRectangle floor;
+    floor.setSize(Vector2f(800, 20));
+    floor.setCenter(Vector2f(400, 590));
+    floor.setStatic(true);
+    world.AddPhysicsBody(floor);
+
+    PhysicsRectangle ceiling;
+    ceiling.setSize(Vector2f(800, 20));
+    ceiling.setCenter(Vector2f(400, 10));
+    ceiling.setStatic(true);
+    world.AddPhysicsBody(ceiling);
+
+    PhysicsRectangle leftWall;
+    leftWall.setSize(Vector2f(20, 600));
+    leftWall.setCenter(Vector2f(10, 300));
+    leftWall.setStatic(true);
+    world.AddPhysicsBody(leftWall);
+
+    PhysicsRectangle rightWall;
+    rightWall.setSize(Vector2f(20, 600));
+    rightWall.setCenter(Vector2f(790, 300));
+    rightWall.setStatic(true);
+    world.AddPhysicsBody(rightWall);
+
+    PhysicsRectangle centerBox;
+    centerBox.setSize(Vector2f(100, 100));
+    centerBox.setCenter(Vector2f(400, 300));
+    centerBox.setStatic(true);
+    world.AddPhysicsBody(centerBox);
+
+    int thudCount(0);
+    int bangCount(0);
+
+    floor.onCollision = [&thudCount](PhysicsBodyCollisionResult result) {
+            cout << "Thud #" << thudCount << endl;
+            thudCount++;
+        };
+    ceiling.onCollision = floor.onCollision;
+    leftWall.onCollision = floor.onCollision;
+    rightWall.onCollision = floor.onCollision;
+    centerBox.onCollision = [&bangCount](PhysicsBodyCollisionResult result) {
+            cout << "Bang #" << bangCount << endl;
+            bangCount++;
+            if (bangCount == 3) {
+                exit(0);
+            }
+        };
+
+    Clock clock;
+    Time lastTime(clock.getElapsedTime());
+
+    while (true) {
+        Time currentTime(clock.getElapsedTime());
+        Time deltaTime(currentTime - lastTime);
+        int deltaTimeMS(deltaTime.asMilliseconds());
+        if (deltaTimeMS > 0) {
+            world.UpdatePhysics(deltaTimeMS);
+            lastTime = currentTime;
+        }
+        window.clear(Color(0, 0, 0));
+        window.draw(ball);
+        window.draw(floor);
+        window.draw(ceiling);
+        window.draw(leftWall);
+        window.draw(rightWall);
+        window.draw(centerBox);
+        window.display();
+    }
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
